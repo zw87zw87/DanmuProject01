@@ -23,7 +23,7 @@ public class DyMessage
      * @param roomId
      * @return
      */
-    public static byte[] getLoginRequestData(int roomId){
+    public static byte[] getLoginRequestData(String roomId){
     	//编码器初始化
     	DyEncoder enc = new DyEncoder();
         //添加登录协议type类型
@@ -66,7 +66,7 @@ public class DyMessage
      * @param groupId
      * @return
      */
-    public static byte[] getJoinGroupRequest(int roomId, int groupId){
+    public static byte[] getJoinGroupRequest(String roomId, int groupId){
     	//编码器初始化
     	DyEncoder enc = new DyEncoder();
     	//添加加入弹幕池协议type类型

@@ -59,7 +59,7 @@ public class DyBulletScreenClient
      * @param roomId 房间ID
      * @param groupId 弹幕池分组ID
      */
-    public void init(int roomId, int groupId){
+    public void init(String roomId, int groupId){
     	//连接弹幕服务器
     	this.connectServer();
     	//登陆指定房间
@@ -105,7 +105,7 @@ public class DyBulletScreenClient
      * 登录指定房间
      * @param roomId
      */
-    private void loginRoom(int roomId)
+    private void loginRoom(String roomId)
     {
     	//获取弹幕服务器登陆请求数据包
     	byte[] loginRequestData = DyMessage.getLoginRequestData(roomId);
@@ -137,7 +137,7 @@ public class DyBulletScreenClient
      * @param roomId
      * @param groupId
      */
-    private void joinGroup(int roomId, int groupId)
+    private void joinGroup(String roomId, int groupId)
     {
     	//获取弹幕服务器加弹幕池请求数据包
     	byte[] joinGroupRequest = DyMessage.getJoinGroupRequest(roomId, groupId);
