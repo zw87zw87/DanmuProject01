@@ -87,6 +87,7 @@ public class DyBulletScreenClient
         {
         	//获取弹幕服务器访问host
         	String host = InetAddress.getByName(hostName).getHostAddress();
+			logger.info("host---->>>",host);
             //建立socke连接
         	sock = new Socket(host, port);
             //设置socket输入及输出
@@ -243,6 +244,9 @@ public class DyBulletScreenClient
 			//@TODO 其他业务信息根据需要进行添加
 			
 			/*************************************************************/
+		}
+		else {
+			logger.error("错误！！！！！","返回消息为空。");
 		}
     }
 }
