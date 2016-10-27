@@ -21,7 +21,7 @@ import com.danmu.msg.MsgView;
  */
 public class DyBulletScreenClient
 {
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+	private final Logger logger = LoggerFactory.getLogger(DyBulletScreenClient.class);
 	private static DyBulletScreenClient instance;
 	
 	//第三方弹幕协议服务器地址
@@ -230,14 +230,14 @@ public class DyBulletScreenClient
     		
 			//判断消息类型
 			if(msg.get("type").equals("chatmsg")){//弹幕消息
-//				logger.debug("弹幕消息===>" + msg.toString());
-                System.out.println("弹幕消息===>" + msg.toString());
+				logger.info("弹幕消息===>" + msg.toString());
+//                System.out.println("弹幕消息===>" + msg.toString());
 			} else if(msg.get("type").equals("dgb")){//赠送礼物信息
-//				logger.debug("礼物消息===>" + msg.toString());
-                System.out.println("礼物消息===>" + msg.toString());
+				logger.info("礼物消息===>" + msg.toString());
+//                System.out.println("礼物消息===>" + msg.toString());
 			} else {
-//				logger.debug("其他消息===>" + msg.toString());
-                System.out.println("其他消息===>" + msg.toString());
+				logger.info("其他消息===>" + msg.toString());
+//                System.out.println("其他消息===>" + msg.toString());
 			}
 			
 			//@TODO 其他业务信息根据需要进行添加

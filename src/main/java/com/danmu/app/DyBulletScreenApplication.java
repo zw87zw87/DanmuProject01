@@ -3,6 +3,8 @@ package com.danmu.app;
 import com.danmu.client.DyBulletScreenClient;
 import com.danmu.utils.KeepAlive;
 import com.danmu.utils.KeepGetMsg;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @summary: 弹幕Demo程序启动类 
@@ -12,6 +14,7 @@ import com.danmu.utils.KeepGetMsg;
  */
 public class DyBulletScreenApplication
 {
+	private final static Logger logger = LoggerFactory.getLogger(DyBulletScreenApplication.class);
 	//设置需要访问的房间ID信息
 //	private static final int roomId = 301712;
 //	private static final String roomId = "58428";
