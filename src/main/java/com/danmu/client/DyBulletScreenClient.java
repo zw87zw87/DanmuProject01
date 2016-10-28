@@ -87,7 +87,7 @@ public class DyBulletScreenClient
         {
         	//获取弹幕服务器访问host
         	String host = InetAddress.getByName(hostName).getHostAddress();
-			logger.info("host---->>>",host);
+			logger.info("host---->>>"+host);
             //建立socke连接
         	sock = new Socket(host, port);
             //设置socket输入及输出
@@ -110,7 +110,7 @@ public class DyBulletScreenClient
     {
     	//获取弹幕服务器登陆请求数据包
     	byte[] loginRequestData = DyMessage.getLoginRequestData(roomId);
-    	logger.info("登陆房间请求数据包>>>",loginRequestData.toString());
+    	logger.info("登陆房间请求数据包>>>"+loginRequestData.toString());
     	
     	try{
     		//发送登陆请求数据包给弹幕服务器
@@ -219,7 +219,7 @@ public class DyBulletScreenClient
      */
     private void parseServerMsg(Map<String, Object> msg){
     	if(msg.get("type") != null){
-    		
+
     		//服务器反馈错误信息
     		if(msg.get("type").equals("error")){
 				logger.debug(msg.toString());
@@ -246,7 +246,7 @@ public class DyBulletScreenClient
 			/*************************************************************/
 		}
 		else {
-			logger.error("错误！！！！！","返回消息为空。");
+			logger.error("错误！！！！！返回消息为空。" + msg.toString());
 		}
     }
 }
