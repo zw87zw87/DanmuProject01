@@ -38,4 +38,11 @@ public class DyEncoder
     	}
     	buf.append("/");
     }
+
+    @Override
+    public String toString() {
+        return "DyEncoder{" +
+                "buf=" + buf.toString() +
+                '}';
+    }
 }

@@ -110,7 +110,7 @@ public class DyBulletScreenClient
     {
     	//获取弹幕服务器登陆请求数据包
     	byte[] loginRequestData = DyMessage.getLoginRequestData(roomId);
-    	
+    	logger.info("登陆房间请求数据包>>>",loginRequestData.toString());
     	
     	try{
     		//发送登陆请求数据包给弹幕服务器
