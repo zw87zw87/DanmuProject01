@@ -42,7 +42,7 @@ public class DyBulletScreenClient
 
 
 	@Autowired
-	protected JdbcTemplate jdbcTemplate;
+	private JdbcTemplate jdbcTemplate;
 	
 	//第三方弹幕协议服务器地址
 	private static final String hostName = "openbarrage.douyutv.com";
