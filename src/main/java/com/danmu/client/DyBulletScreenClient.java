@@ -4,14 +4,18 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.danmu.msg.DyMessage;
 import com.danmu.msg.MsgView;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * @Summary: 弹幕客户端类
@@ -23,6 +27,22 @@ public class DyBulletScreenClient
 {
 	private final Logger logger = LoggerFactory.getLogger(DyBulletScreenClient.class);
 	private static DyBulletScreenClient instance;
+
+	private static List<Object[]> danmuParams = Lists.newArrayList();
+	private static int danmuSize = 10;
+	private static int count = 1;
+
+	private static String rid = "";
+	private static String uid = "";
+	private static String nn = "";
+	private static String txt = "";
+	private static String level = "";
+	private static String col = "";
+	private static String ct = "";
+
+
+	@Autowired
+	protected JdbcTemplate jdbcTemplate;
 	
 	//第三方弹幕协议服务器地址
 	private static final String hostName = "openbarrage.douyutv.com";
@@ -193,7 +213,7 @@ public class DyBulletScreenClient
 			System.arraycopy(recvByte, 0, realBuf, 0, recvLen);
 			//根据TCP协议获取返回信息中的字符串信息
 			dataStr = new String(realBuf, 12, realBuf.length - 12);
-			
+
 			//循环处理socekt黏包情况
 			while(dataStr.lastIndexOf("type@=") > 5){
 				//对黏包中最后一个数据包进行解析
@@ -207,6 +227,13 @@ public class DyBulletScreenClient
 			MsgView msgView = new MsgView(StringUtils.substring(dataStr, dataStr.lastIndexOf("type@=")));
 			//分析该包的数据类型，以及根据需要进行业务操作
 			parseServerMsg(msgView.getMessageList());
+
+			//批量插入数据库，设置每100条，插入到数据库
+			if (count > danmuSize){
+				count = 0;
+				batchInsertDanmu(danmuParams);
+				danmuParams.clear();
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -219,34 +246,50 @@ public class DyBulletScreenClient
      */
     private void parseServerMsg(Map<String, Object> msg){
     	if(msg.get("type") != null){
-
     		//服务器反馈错误信息
     		if(msg.get("type").equals("error")){
 				logger.debug(msg.toString());
 				//结束心跳和获取弹幕线程
 				this.readyFlag = false;
 			}
-    		
     		/***@TODO 根据业务需求来处理获取到的所有弹幕及礼物信息***********/
-    		
 			//判断消息类型
 			if(msg.get("type").equals("chatmsg")){//弹幕消息
 				logger.info("弹幕消息===>" + msg.toString());
-//                System.out.println("弹幕消息===>" + msg.toString());
+
+				if (msg.get("rid") != null) rid = (String)msg.get("rid");
+				if (msg.get("uid") != null) rid = (String)msg.get("uid");
+				if (msg.get("nn") != null) rid = (String)msg.get("nn");
+				if (msg.get("txt") != null) rid = (String)msg.get("txt");
+				if (msg.get("level") != null) rid = (String)msg.get("level");
+				if (msg.get("col") != null) rid = (String)msg.get("col");
+				if (msg.get("ct") != null) rid = (String)msg.get("ct");
+
+				//弹幕计数器
+				count++;
+				Object[] param = {rid,uid,nn,txt,level,col,ct};
+				danmuParams.add(param);
+
 			} else if(msg.get("type").equals("dgb")){//赠送礼物信息
 				logger.info("礼物消息===>" + msg.toString());
-//                System.out.println("礼物消息===>" + msg.toString());
 			} else {
 				logger.info("其他消息===>" + msg.toString());
-//                System.out.println("其他消息===>" + msg.toString());
 			}
 			
 			//@TODO 其他业务信息根据需要进行添加
-			
-			/*************************************************************/
+
 		}
 		else {
 			logger.error("错误！！！！！返回消息为空。" + msg.toString());
 		}
     }
+
+	private void batchInsertDanmu(List<Object[]> params) {
+//		if (params != null && params.size() > 0) {
+//			String sql = "insert into chatmsg(rid,uid,nn,txt,level,col,ct) values(?,?,?,?,?,?,?)";
+//			jdbcTemplate.batchUpdate(sql, params);
+//		}
+			String sql = "INSERT INTO chatmsg(rid,uid,nn,txt,level,col,ct) VALUES ('229346','53445488','眼睛有点涩丶','还没','10','0','0');";
+			jdbcTemplate.execute(sql);
+	}
 }
