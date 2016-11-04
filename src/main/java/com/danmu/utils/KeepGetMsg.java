@@ -20,7 +20,7 @@ public class KeepGetMsg extends Thread {
         while(danmuClient.getReadyFlag())
         {
         	//获取服务器发送的弹幕信息
-        	danmuClient.getServerMsg();;
+        	danmuClient.getServerMsg();
         }
     }
 }

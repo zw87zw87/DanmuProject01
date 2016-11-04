@@ -43,7 +43,7 @@ public class DyBulletScreenClient
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-	
+
 	//第三方弹幕协议服务器地址
 	private static final String hostName = "openbarrage.douyutv.com";
 	
@@ -103,6 +103,7 @@ public class DyBulletScreenClient
      */
     private void connectServer()
     {
+		logger.debug("尝试连接弹幕服务器...");
         try
         {
         	//获取弹幕服务器访问host
@@ -113,13 +114,12 @@ public class DyBulletScreenClient
             //设置socket输入及输出
             bos = new BufferedOutputStream(sock.getOutputStream());
             bis= new BufferedInputStream(sock.getInputStream());
-        }
-        catch(Exception e)
+        } catch(Exception e)
         {
             e.printStackTrace();
         }
 
-        logger.debug("Server Connect Successfully!");
+        logger.debug("连接弹幕服务器成功...");
     }
 
     /**
@@ -144,9 +144,9 @@ public class DyBulletScreenClient
     		
     		//解析服务器返回的登录信息
     		if(DyMessage.parseLoginRespond(recvByte)){
-    			logger.debug("Receive login response successfully!");
+    			logger.debug("登录房间号：" + roomId + " 成功！");
             } else {
-            	logger.error("Receive login response failed!");
+            	logger.error("登录房间号：" + roomId + " 失败！" + recvByte.toString());
             }
     	}catch(Exception e){
     		e.printStackTrace();
@@ -167,11 +167,11 @@ public class DyBulletScreenClient
     		//想弹幕服务器发送加入弹幕池请求数据
     		bos.write(joinGroupRequest, 0, joinGroupRequest.length);
             bos.flush();
-            logger.debug("Send join group request successfully!");
+            logger.debug(" 加入弹幕分组池成功   Send join group request successfully!");
             
     	} catch(Exception e){
     		e.printStackTrace();
-    		logger.error("Send join group request failed!");
+    		logger.error(" 加入弹幕分组池失败   Send join group request failed!");
     	}
     }
 
@@ -187,11 +187,11 @@ public class DyBulletScreenClient
         	//向弹幕服务器发送心跳请求数据包
     		bos.write(keepAliveRequest, 0, keepAliveRequest.length);
             bos.flush();
-            logger.debug("Send keep alive request successfully!");
+            logger.debug("服务器心跳连接成功   Send keep alive request successfully!");
             
     	} catch(Exception e){
     		e.printStackTrace();
-    		logger.error("Send keep alive request failed!");
+    		logger.error("服务器心跳连接失败   Send keep alive request failed!");
     	}
     }
 
@@ -206,7 +206,7 @@ public class DyBulletScreenClient
 		try {
 			//读取服务器返回信息，并获取返回信息的整体字节长度
 			int recvLen = bis.read(recvByte, 0, recvByte.length);
-			
+
 			//根据实际获取的字节数初始化返回信息内容长度
 			byte[] realBuf = new byte[recvLen];
 			//按照实际获取的字节长度读取返回信息
@@ -228,12 +228,12 @@ public class DyBulletScreenClient
 			//分析该包的数据类型，以及根据需要进行业务操作
 			parseServerMsg(msgView.getMessageList());
 
-			//批量插入数据库，设置每100条，插入到数据库
-			if (count > danmuSize){
-				count = 0;
-				batchInsertDanmu(danmuParams);
-				danmuParams.clear();
-			}
+//			//批量插入数据库，设置每100条，插入到数据库
+//			if (count > danmuSize){
+//				count = 0;
+//				batchInsertDanmu(danmuParams);
+//				danmuParams.clear();
+//			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -257,18 +257,18 @@ public class DyBulletScreenClient
 			if(msg.get("type").equals("chatmsg")){//弹幕消息
 				logger.info("弹幕消息===>" + msg.toString());
 
-				if (msg.get("rid") != null) rid = (String)msg.get("rid");
-				if (msg.get("uid") != null) rid = (String)msg.get("uid");
-				if (msg.get("nn") != null) rid = (String)msg.get("nn");
-				if (msg.get("txt") != null) rid = (String)msg.get("txt");
-				if (msg.get("level") != null) rid = (String)msg.get("level");
-				if (msg.get("col") != null) rid = (String)msg.get("col");
-				if (msg.get("ct") != null) rid = (String)msg.get("ct");
-
-				//弹幕计数器
-				count++;
-				Object[] param = {rid,uid,nn,txt,level,col,ct};
-				danmuParams.add(param);
+//				if (msg.get("rid") != null) rid = (String)msg.get("rid");
+//				if (msg.get("uid") != null) rid = (String)msg.get("uid");
+//				if (msg.get("nn") != null) rid = (String)msg.get("nn");
+//				if (msg.get("txt") != null) rid = (String)msg.get("txt");
+//				if (msg.get("level") != null) rid = (String)msg.get("level");
+//				if (msg.get("col") != null) rid = (String)msg.get("col");
+//				if (msg.get("ct") != null) rid = (String)msg.get("ct");
+//
+//				//弹幕计数器
+//				count++;
+//				Object[] param = {rid,uid,nn,txt,level,col,ct};
+//				danmuParams.add(param);
 
 			} else if(msg.get("type").equals("dgb")){//赠送礼物信息
 				logger.info("礼物消息===>" + msg.toString());
@@ -280,7 +280,7 @@ public class DyBulletScreenClient
 
 		}
 		else {
-			logger.error("错误！！！！！返回消息为空。" + msg.toString());
+			logger.error("返回弹幕消息错误！！！！！返回消息为空。" + msg.toString());
 		}
     }
 

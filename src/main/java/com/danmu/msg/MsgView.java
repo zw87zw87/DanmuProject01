@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @Summary: 弹幕协议解析类
@@ -14,6 +16,8 @@ import org.apache.commons.lang3.StringUtils;
 public class MsgView {
 
 	private Map<String, Object> messageList;
+
+	private static Logger logger = LoggerFactory.getLogger(MsgView.class);
 
 	public MsgView(String data){
 		this.messageList = parseRespond(data);
@@ -42,7 +46,7 @@ public class MsgView {
 	 */
 	public Map<String, Object> parseRespond(String data){
 		Map<String, Object> rtnMsg = new HashMap<String, Object>();
-		
+		logger.info("数据包信息>>>" + data);
 		//处理数据字符串末尾的'/0字符'
 		data = StringUtils.substringBeforeLast(data, "/");
 		

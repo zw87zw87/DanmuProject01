@@ -6,6 +6,8 @@ import java.io.DataOutputStream;
 import org.apache.commons.lang3.StringUtils;
 
 import com.danmu.utils.FormatTransfer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @Summary: 斗鱼弹幕协议信息封装类
@@ -17,6 +19,7 @@ public class DyMessage
 {
 	//弹幕客户端类型设置
     public final static int DY_MESSAGE_TYPE_CLIENT = 689;
+    private final static Logger logger = LoggerFactory.getLogger(DyMessage.class);
     
     /**
      * 生成登录请求数据包
@@ -42,6 +45,8 @@ public class DyMessage
      */
     public static boolean parseLoginRespond(byte[] respond){
     	boolean rtn = false;
+
+        logger.info("登录请求返回结果>>>" + new String(respond));
     	
     	//返回数据不正确（仅包含12位信息头，没有信息内容）
     	if(respond.length <= 12){
@@ -50,7 +55,7 @@ public class DyMessage
     	
     	//解析返回信息包中的信息内容
     	String dataStr = new String(respond, 12, respond.length - 12);
-    	
+        logger.info("登录请求返回结果>>>" + dataStr);
     	//针对登录返回信息进行判断
     	if(StringUtils.contains(dataStr, "type@=loginres")){
     		rtn = true;
