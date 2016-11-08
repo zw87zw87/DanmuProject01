@@ -18,7 +18,8 @@ public class DyBulletScreenApplication
 	//设置需要访问的房间ID信息
 //	private static final int roomId = 301712;
 //	private static final String roomId = "58428";
-	private static final String roomId = "229346";
+//	private static final String roomId = "229346";
+	private static final String roomId = "Qianjia2015";
 //	private static final String roomId = "67554";
 
 	//弹幕池分组号，海量模式使用-9999
