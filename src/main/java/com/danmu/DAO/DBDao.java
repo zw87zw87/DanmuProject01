@@ -13,7 +13,7 @@ public class DBDao {
         String url;
 
 //        db_host = "172.18.1.55";
-        db_host = "localhost";
+        db_host = "127.0.0.1";
         db_port = "3306";
         db_name = "danmu";
         db_user = "root";
@@ -35,6 +35,8 @@ public class DBDao {
 
             sql = "select * from chatmsg";
             ResultSet rs = stmt.executeQuery(sql);
+
+//            stmt.executeBatch();
 
             while (rs.next()) {
                 System.out.println(rs.getString(1) + "\t" + rs.getString(2));

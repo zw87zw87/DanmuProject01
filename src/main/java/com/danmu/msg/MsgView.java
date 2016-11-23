@@ -46,7 +46,7 @@ public class MsgView {
 	 */
 	public Map<String, Object> parseRespond(String data){
 		Map<String, Object> rtnMsg = new HashMap<String, Object>();
-		logger.info("数据包信息>>>" + data);
+//		logger.info("数据包信息>>>" + data);
 		//处理数据字符串末尾的'/0字符'
 		data = StringUtils.substringBeforeLast(data, "/");
 		
