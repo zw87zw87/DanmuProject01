@@ -1,41 +1,20 @@
 package com.danmu.utils;
 
 import com.danmu.domain.Room;
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
-public class RoomHttp implements Callable<List<Room>>{
-    private static List<String> list;
+public class RoomHttp1 {
 
-    public RoomHttp(List<String> list) {
-        this.list = list;
-    }
-
-    @Override
-    public List<Room> call() throws Exception {
-
-        List<Room> result = Lists.newArrayList();
-
-        for (String roomId : list){
-            result.add(roomGet(roomId));
-        }
-        return result;
-    }
-
-    public Room roomGet(String roomId){
+    public static Room roomGet(String roomId){
         Logger logger = LoggerFactory.getLogger(RoomHttp.class);
 
         logger.info("请求房间信息 roomId: " + roomId);

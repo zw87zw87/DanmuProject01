@@ -12,12 +12,12 @@ import java.io.BufferedOutputStream;
  * @date:   2016-3-12
  * @version V1.0
  */
-public class KeepAlive1 extends Thread {
+public class KeepAlive2 extends Thread {
     private BufferedOutputStream bos;
     //获取弹幕线程及心跳线程运行和停止标记
     private boolean readyFlag = false;
 
-    public KeepAlive1(BufferedOutputStream bos , boolean readyFlag) {
+    public KeepAlive2(BufferedOutputStream bos , boolean readyFlag) {
         this.bos = bos;
         this.readyFlag = readyFlag;
     }
@@ -28,12 +28,6 @@ public class KeepAlive1 extends Thread {
         //判断客户端就绪状态
         while(readyFlag)
         {
-//            //判断是否关播
-//            Room room = RoomHttp.roomGet("229346");
-//            if (room.getRoom_status().equals("2")){
-//                readyFlag = false;
-//            }
-
             //发送心跳保持协议给服务器端
             keepAlive(bos);
             try

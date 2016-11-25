@@ -1,144 +1,146 @@
-package com.danmu.test;
+package com.danmu.client;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.List;
+import java.util.Map;
 
 import com.danmu.domain.Room;
-import com.danmu.msg.DyMessage;
-import com.danmu.msg.MsgView;
-import com.danmu.utils.KeepAlive1;
-import com.danmu.utils.RoomHttp;
+import com.danmu.utils.KeepAlive;
+import com.danmu.utils.KeepAlive2;
+import com.danmu.utils.RoomHttp1;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
+import com.danmu.msg.DyMessage;
+import com.danmu.msg.MsgView;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
-public class DanmuTest02 {
-    private static final Logger logger = LoggerFactory.getLogger(DanmuTest02.class);
+/**
+ * @Summary: 弹幕客户端类
+ * @author: FerroD
+ * @date:   2016-3-12
+ * @version V1.0
+ */
+public class DyBulletScreenClient2 implements Runnable
+{
+    private final Logger logger = LoggerFactory.getLogger(DyBulletScreenClient.class);
+
     //第三方弹幕协议服务器地址
     private static final String hostName = "openbarrage.douyutv.com";
+
     //第三方弹幕协议服务器端口
     private static final int port = 8601;
+
     //设置字节获取buffer的最大值
     private static final int MAX_BUFFER_LENGTH = 4096;
+
+    private String roomId;
     //弹幕池分组号，海量模式使用-9999
-    private static final int groupId = -9999;
-//    //socket相关配置
-//    private Socket sock;
-//    private BufferedOutputStream bos;
-//    private BufferedInputStream bis;
-//    //获取弹幕线程及心跳线程运行和停止标记
-//    private boolean readyFlag = false;
+    private int groupId = -9999;
+
+    //socket相关配置
+    private Socket sock;
+    private BufferedOutputStream bos;
+    private BufferedInputStream bis;
+
+    //获取弹幕线程及心跳线程运行和停止标记
+    private boolean readyFlag = false;
+
+    public DyBulletScreenClient2(String roomId) {
+        this.roomId = roomId;
+    }
+
+    @Override
+    public void run() {
+        Room room = RoomHttp1.roomGet(roomId);
+        if (room.getRoom_status().equals("1")){
+            readyFlag = true;
+        }else {
+            readyFlag = false;
+        }
+        if (readyFlag){
+            //连接弹幕服务器
+            connectServer();
+            //登陆指定房间
+            loginRoom(roomId);
+            //加入指定的弹幕池
+            joinGroup(roomId, groupId);
+
+            //保持弹幕服务器心跳
+            KeepAlive2 keepAlive2 = new KeepAlive2(bos,readyFlag);
+            keepAlive2.start();
+        }
+        //判断客户端就绪状态
+        while(readyFlag)
+        {
+            getServerMsg();
+        }
+    }
 
 
-    public static void main(String[] args) {
-        int numTasks = 2;
-        String roomId1 = "229346";
-        String roomId2 = "532152";
-        String roomId3 = "244548";
-        String roomId4 = "56040";
-        String roomId5 = "453751";
+    /**
+     * 客户端初始化，连接弹幕服务器并登陆房间及弹幕池
+     * @param roomId 房间ID
+     * @param groupId 弹幕池分组ID
+     */
+//    public void init(String roomId, int groupId){
+//        //连接弹幕服务器
+//        this.connectServer();
+//        //登陆指定房间
+//        this.loginRoom(roomId);
+//        //加入指定的弹幕池
+//        this.joinGroup(roomId, groupId);
+//        //设置客户端就绪标记为就绪状态
+//        readyFlag = true;
+//    }
 
-        List<String> room = Lists.newArrayList();
-        room.add(roomId1);
-        room.add(roomId2);
-        room.add(roomId3);
-        room.add(roomId4);
-        room.add(roomId5);
+    /**
+     * 获取弹幕客户端就绪标记
+     * @return
+     */
+    public boolean getReadyFlag(){
+        return readyFlag;
+    }
 
-//        Room room = RoomHttp.roomGet(roomId1);
-        // 1.开播  2.关播
-//        logger.info("是否开播：" + room.getRoom_status());
-
-//        ExecutorService exec = Executors.newCachedThreadPool();
-//
-////        for (int i = 0; i < numTasks; i++) {
-////            exec.execute(createTask(i , "roomId" + i));
-////        }
-//
-//        exec.execute(createTask(roomId1));
-//        exec.execute(createTask(roomId2));
-//        exec.execute(createTask(roomId3));
-//        exec.execute(createTask(roomId4));
-//        exec.execute(createTask(roomId5));
-
-//        exec.shutdown();
-
-        ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-
-        Future<List<Room>> future = exec.submit(new RoomHttp(room));
-
-//        Future<List<Room>> future = exec.schedule(new RoomHttp(room),1,TimeUnit.MINUTES);
-
-        try {
-            List<Room> result = future.get();
-
-            for (Room room1 : result){
-                System.out.println("room1 = " + room1);
-            }
-
-
-        } catch (Exception e) {
-            logger.error("得到房间信息错误>>>>" + e.getMessage());
+    /**
+     * 连接弹幕服务器
+     */
+    private void connectServer()
+    {
+        logger.debug("尝试连接弹幕服务器...");
+        try
+        {
+            //获取弹幕服务器访问host
+            String host = InetAddress.getByName(hostName).getHostAddress();
+            logger.info("host---->>>"+host);
+            //建立socke连接
+            sock = new Socket(host, port);
+            //设置socket输入及输出
+            bos = new BufferedOutputStream(sock.getOutputStream());
+            bis= new BufferedInputStream(sock.getInputStream());
+        } catch(Exception e)
+        {
             e.printStackTrace();
         }
 
-        exec.shutdown();
-
-    }
-
-    // 定义一个简单的任务
-    private static Runnable createTask(final String roomId) {
-        return new Runnable() {
-            private Socket socket = null;
-            //获取弹幕线程及心跳线程运行和停止标记
-            private boolean readyFlag = false;
-
-            public void run() {
-                System.out.println("roomId: " + roomId);
-                try {
-                    String host = InetAddress.getByName(hostName).getHostAddress();
-                    socket = new Socket(host, port);
-
-                    BufferedOutputStream bos = new BufferedOutputStream(socket.getOutputStream());
-                    BufferedInputStream bis= new BufferedInputStream(socket.getInputStream());
-
-                    loginRoom(roomId, bos, bis);
-
-                    joinGroup(roomId, groupId, bos);
-
-                    readyFlag = true;
-
-                    //保持弹幕服务器心跳
-                    KeepAlive1 keepAlive1 = new KeepAlive1(bos,readyFlag);
-                    keepAlive1.start();
-
-
-                    while (readyFlag){
-                        getServerMsg(bis);
-                    }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        };
+        logger.debug("连接弹幕服务器成功...");
     }
 
     /**
      * 登录指定房间
      * @param roomId
      */
-    private static void loginRoom(String roomId,BufferedOutputStream bos,BufferedInputStream bis)
+    private void loginRoom(String roomId)
     {
         //获取弹幕服务器登陆请求数据包
         byte[] loginRequestData = DyMessage.getLoginRequestData(roomId);
-//        logger.info("登陆房间请求数据包>>>"+new String(loginRequestData));
+        logger.info("登陆房间请求数据包>>>"+loginRequestData.toString());
 
         try{
             //发送登陆请求数据包给弹幕服务器
@@ -166,7 +168,7 @@ public class DanmuTest02 {
      * @param roomId
      * @param groupId
      */
-    private static void joinGroup(String roomId, int groupId,BufferedOutputStream bos)
+    private void joinGroup(String roomId, int groupId)
     {
         //获取弹幕服务器加弹幕池请求数据包
         byte[] joinGroupRequest = DyMessage.getJoinGroupRequest(roomId, groupId);
@@ -183,11 +185,30 @@ public class DanmuTest02 {
         }
     }
 
+    /**
+     * 服务器心跳连接
+     */
+    public void keepAlive()
+    {
+        //获取与弹幕服务器保持心跳的请求数据包
+        byte[] keepAliveRequest = DyMessage.getKeepAliveData((int)(System.currentTimeMillis() / 1000));
+
+        try{
+            //向弹幕服务器发送心跳请求数据包
+            bos.write(keepAliveRequest, 0, keepAliveRequest.length);
+            bos.flush();
+            logger.debug("服务器心跳连接成功   Send keep alive request successfully!");
+
+        } catch(Exception e){
+            e.printStackTrace();
+            logger.error("服务器心跳连接失败   Send keep alive request failed!");
+        }
+    }
 
     /**
      * 获取服务器返回信息
      */
-    public static void getServerMsg(BufferedInputStream bis){
+    public void getServerMsg(){
         //初始化获取弹幕服务器返回信息包大小
         byte[] recvByte = new byte[MAX_BUFFER_LENGTH];
         //定义服务器返回信息的字符串
@@ -229,25 +250,22 @@ public class DanmuTest02 {
         }
     }
 
-
     /**
      * 解析从服务器接受的协议，并根据需要订制业务需求
      * @param msg
      */
-    private static void parseServerMsg(Map<String, Object> msg){
+    private void parseServerMsg(Map<String, Object> msg){
         if(msg.get("type") != null){
             //服务器反馈错误信息
             if(msg.get("type").equals("error")){
                 logger.debug(msg.toString());
                 //结束心跳和获取弹幕线程
-//                this.readyFlag = false;
+                this.readyFlag = false;
             }
             /***@TODO 根据业务需求来处理获取到的所有弹幕及礼物信息***********/
             //判断消息类型
             if(msg.get("type").equals("chatmsg")){//弹幕消息
-//                logger.info("弹幕消息===>" + msg.toString());
-
-                logger.info("弹幕=> 房间号：" + msg.get("rid") + " 用户名：" + msg.get("nn") + " 消息：" + msg.get("txt") + "...." + msg.get("col") + "...." + msg.get("ct") + "......" + msg.get("level"));
+                logger.info("弹幕消息===>" + msg.toString());
 
 //				if (msg.get("rid") != null) rid = (String)msg.get("rid");
 //				if (msg.get("uid") != null) rid = (String)msg.get("uid");
@@ -256,23 +274,18 @@ public class DanmuTest02 {
 //				if (msg.get("level") != null) rid = (String)msg.get("level");
 //				if (msg.get("col") != null) rid = (String)msg.get("col");
 //				if (msg.get("ct") != null) rid = (String)msg.get("ct");
-//
-//				//弹幕计数器
-//				count++;
-//				Object[] param = {rid,uid,nn,txt,level,col,ct};
-//				danmuParams.add(param);
 
             } else if(msg.get("type").equals("dgb")){//赠送礼物信息
-//                logger.info("礼物消息===>" + msg.toString());
+                logger.info("礼物消息===>" + msg.toString());
             } else {
-//                logger.info("其他消息===>" + msg.toString());
+                logger.info("其他消息===>" + msg.toString());
             }
 
             //@TODO 其他业务信息根据需要进行添加
 
         }
         else {
-//            logger.error("返回弹幕消息错误！！！！！返回消息为空。" + msg.toString());
+            logger.error("返回弹幕消息错误！！！！！返回消息为空。" + msg.toString());
         }
     }
 
